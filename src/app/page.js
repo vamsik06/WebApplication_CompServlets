@@ -138,27 +138,27 @@ export default function Home() {
       setShowResponse(false)
       setAnimationStep(0) // Reset animation step
 
-      const stepDuration = 750 // Duration for each step's drawing animation
+      const stepDuration = 800 // Duration for each step's drawing animation
 
       // Step 1: Go Button to Internet (Request)
       setTimeout(() => {
         setAnimationStep(1)
-      }, 100)
+      }, 200)
 
-      // Step 2: Internet to R-box (Request)
+      // Step 2: Internet to Web App (Request)
       setTimeout(() => {
         setAnimationStep(2)
-      }, 100 + stepDuration)
+      }, 200 + stepDuration)
 
-      // Step 3: R-box back to Internet (Response)
+      // Step 3: Web App to Internet (Response)
       setTimeout(
         () => {
           setAnimationStep(3)
         },
-        100 + 2 * stepDuration,
+        200 + 2 * stepDuration,
       )
 
-      // Step 4: Internet to Response Box (Final Response) - Show response after line completes
+      // Step 4: Internet to Web Client (Response)
       setTimeout(
         () => {
           setAnimationStep(4)
@@ -166,9 +166,9 @@ export default function Home() {
           setTimeout(() => {
             setShowResponse(true)
             setResponseData(`Success! Response from R${rNumber}: Data received successfully.`)
-          }, 700) // Wait for the line animation to complete
+          }, 600) // Wait for the line animation to complete
         },
-        100 + 3 * stepDuration,
+        200 + 3 * stepDuration,
       )
 
       // Final step: Reset animation states but keep response visible
@@ -421,45 +421,48 @@ export default function Home() {
           <svg
             className={`absolute inset-0 pointer-events-none w-full h-full ${isDarkMode ? 'text-white' : 'text-black'}`}
             viewBox="0 0 100 100"
-            style={{ zIndex: 50 }}
+            style={{ zIndex: 30 }}
           >
             {/* Step 1: Go Button to Internet (Request) */}
             <path
               ref={path1Ref}
               d="M 20 15 C 35 25, 40 35, 45 45" // Smoother curve to Internet
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="0.8"
               fill="none"
               style={{
                 strokeDasharray: pathLengths.p1,
                 strokeDashoffset: animationStep >= 1 ? 0 : pathLengths.p1,
-                transition: "stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)",
+                transition: "stroke-dashoffset 0.6s ease-out",
+                opacity: animationStep >= 1 ? 1 : 0,
               }}
             />
             {/* Step 2: Internet to Web App (Request) */}
             <path
               ref={path2Ref}
-              d={`M 45 45 C 55 45, 65 45, ${r3Coords.x} ${r3Coords.y}`}
+              d={`M 45 45 C 55 45, 65 45, ${r3Coords.x - 5} ${r3Coords.y - 5}`}
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="0.8"
               fill="none"
               style={{
                 strokeDasharray: pathLengths.p2,
                 strokeDashoffset: animationStep >= 2 ? 0 : pathLengths.p2,
-                transition: "stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)",
+                transition: "stroke-dashoffset 0.6s ease-out",
+                opacity: animationStep >= 2 ? 1 : 0,
               }}
             />
             {/* Step 3: Web App to Internet (Response) */}
             <path
               ref={path3Ref}
-              d={`M ${r3Coords.x} ${r3Coords.y} C 70 50, 60 50, 50 50`}
+              d={`M ${r3Coords.x - 5} ${r3Coords.y - 5} C 70 50, 60 50, 50 50`}
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="0.8"
               fill="none"
               style={{
                 strokeDasharray: pathLengths.p3,
                 strokeDashoffset: animationStep >= 3 ? 0 : pathLengths.p3,
-                transition: "stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)",
+                transition: "stroke-dashoffset 0.6s ease-out",
+                opacity: animationStep >= 3 ? 1 : 0,
               }}
             />
             {/* Step 4: Internet to Web Client (Response) */}
@@ -467,12 +470,13 @@ export default function Home() {
               ref={path4Ref}
               d="M 50 50 C 45 47, 40 45, 20 45" // Curve from Internet to Web Client
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="0.8"
               fill="none"
               style={{
                 strokeDasharray: pathLengths.p4,
                 strokeDashoffset: animationStep >= 4 ? 0 : pathLengths.p4,
-                transition: "stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)",
+                transition: "stroke-dashoffset 0.6s ease-out",
+                opacity: animationStep >= 4 ? 1 : 0,
               }}
             />
 
@@ -605,6 +609,7 @@ export default function Home() {
             } ${
               isDarkMode ? 'border-white bg-black' : 'border-black bg-white'
             }`}
+            style={{ zIndex: 35 }}
           >
             <div className="absolute inset-0 flex items-center justify-center">
               <span className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-white' : 'text-black'}`}>Internet</span>
@@ -647,7 +652,7 @@ export default function Home() {
               >
                 {/* Web Container Box */}
                 <div
-                  className={`absolute inset-x-4 inset-y-6 border-4 rounded-lg transition-opacity duration-700 z-10 ${showInnerBox ? "opacity-100" : "opacity-0"} ${
+                  className={`absolute inset-x-4 inset-y-6 border-4 rounded-lg transition-opacity duration-700 z-5 ${showInnerBox ? "opacity-100" : "opacity-0"} ${
                     isDarkMode ? 'border-white bg-black' : 'border-black bg-white'
                   }`}
                 >
@@ -658,7 +663,7 @@ export default function Home() {
                   </div>
                   {/* Web App Box */}
                   <div
-                    className={`absolute inset-x-4 inset-y-6 border-4 rounded-lg transition-opacity duration-700 z-20 ${showWebApp ? "opacity-100" : "opacity-0"} ${
+                    className={`absolute inset-x-4 inset-y-6 border-4 rounded-lg transition-opacity duration-700 z-15 ${showWebApp ? "opacity-100" : "opacity-0"} ${
                       isDarkMode ? 'border-white bg-black' : 'border-black bg-white'
                     }`}
                   >

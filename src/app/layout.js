@@ -20,7 +20,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased transition-colors duration-300`}
       >
         <DarkModeProvider>
-          {children}
+        {children}
         </DarkModeProvider>
       </body>
     </html>
