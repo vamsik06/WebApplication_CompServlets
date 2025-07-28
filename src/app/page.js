@@ -53,6 +53,9 @@ export default function Home() {
   const [animationStep, setAnimationStep] = useState(0) // 0: none, 1: path1, 2: path2, 3: path3, 4: path4
   const [showRequestLabel, setShowRequestLabel] = useState(false)
   const [showResponseLabel, setShowResponseLabel] = useState(false)
+  const [typedUrl, setTypedUrl] = useState("")
+  const [isTyping, setIsTyping] = useState(false)
+  const [showResetMessage, setShowResetMessage] = useState(false)
   const { isDarkMode, toggleDarkMode } = useDarkMode()
 
   // Refs for SVG paths to get their lengths
@@ -79,7 +82,40 @@ export default function Home() {
     }
   }, [showAnimation, selectedRBox]) // Recalculate if animation starts or RBox changes
 
+  // Typing animation effect
+  useEffect(() => {
+    if (showBrowserBox && !isTyping) {
+      setIsTyping(true)
+      setTypedUrl("")
+      let currentIndex = 0
+      const fullUrl = "https://www./192.168.0.20:9090/"
+      
+      const typeInterval = setInterval(() => {
+        if (currentIndex < fullUrl.length) {
+          setTypedUrl(fullUrl.slice(0, currentIndex + 1))
+          currentIndex++
+        } else {
+          clearInterval(typeInterval)
+          setIsTyping(false)
+        }
+      }, 100) // Type each character every 100ms
+      
+      return () => clearInterval(typeInterval)
+    }
+  }, [showBrowserBox])
+
+  // Auto-scroll to end of URL input when typing
+  useEffect(() => {
+    if (isTyping && typedUrl) {
+      const urlInput = document.querySelector('input[type="text"]')
+      if (urlInput) {
+        urlInput.scrollLeft = urlInput.scrollWidth
+      }
+    }
+  }, [typedUrl, isTyping])
+
   const handleStart = () => {
+    setShowResetMessage(false)
     setShowBoxes(true)
     setShowLabels(false)
     setShowInnerBox(false)
@@ -339,6 +375,7 @@ export default function Home() {
     setShowResponse(false)
     setResponseData("")
     setAnimationStep(0) // Reset animation step on reset
+    setShowResetMessage(true)
     // setShowRequestLabel(false)
     // setShowResponseLabel(false)
   }
@@ -346,7 +383,7 @@ export default function Home() {
 
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 border-4 rounded-xl shadow-lg mx-4 sm:mx-6 md:mx-8 gap-2 transition-colors duration-300 ${
+    <div className={`max-h-[700px] flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 border-4 rounded-xl shadow-lg mx-4 sm:mx-6 md:mx-8 gap-2 transition-colors duration-300 ${
       isDarkMode 
         ? 'border-white' 
         : 'border-black'
@@ -368,65 +405,74 @@ export default function Home() {
         </Button>
       </div>
 
+      {/* Reset Message */}
+      {showResetMessage && (
+        <div className={`text-center mb-4 px-4 py-2 rounded-lg transition-opacity duration-500 ${
+          isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700'
+        }`}>
+          <div className="text-sm font-medium">Click "Start" to begin the animation</div>
+        </div>
+      )}
+
       {/* Animated Boxes Section - Always Side by Side */}
       <div className="flex flex-row items-center justify-center gap-4 sm:gap-8 md:gap-12 lg:gap-16 mt-4 sm:mt-6 md:mt-8 w-full max-w-6xl relative">
         {/* Animated Flow Lines */}
         {showAnimation && (
           <svg
-            className="absolute inset-0 pointer-events-none w-full h-full"
+            className={`absolute inset-0 pointer-events-none w-full h-full ${isDarkMode ? 'text-white' : 'text-black'}`}
             viewBox="0 0 100 100"
             style={{ zIndex: 50 }}
           >
             {/* Step 1: Go Button to Internet (Request) */}
             <path
               ref={path1Ref}
-              d="M 20.5 12 C 42 20, 44 35, 45 45" // Start from beside Go button, curve to Internet box
-              stroke="#3B82F6" // Blue for request
-              strokeWidth="1" // Thin line
+              d="M 20 15 C 35 25, 40 35, 45 45" // Smoother curve to Internet
+              stroke="currentColor"
+              strokeWidth="2"
               fill="none"
               style={{
                 strokeDasharray: pathLengths.p1,
                 strokeDashoffset: animationStep >= 1 ? 0 : pathLengths.p1,
-                transition: "stroke-dashoffset 0.7s ease-out",
+                transition: "stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             />
-            {/* Step 2: Internet to R-box (Request) - Always to R3 */}
+            {/* Step 2: Internet to Web App (Request) */}
             <path
               ref={path2Ref}
-              d={`M 45 45 C 55 45, 65 45, ${r3Coords.x -5} ${r3Coords.y - 5}`}
-              stroke="#3B82F6" // Blue for request
-              strokeWidth="1" // Thin line
+              d={`M 45 45 C 55 45, 65 45, ${r3Coords.x} ${r3Coords.y}`}
+              stroke="currentColor"
+              strokeWidth="2"
               fill="none"
               style={{
                 strokeDasharray: pathLengths.p2,
                 strokeDashoffset: animationStep >= 2 ? 0 : pathLengths.p2,
-                transition: "stroke-dashoffset 0.7s ease-out",
+                transition: "stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             />
-            {/* Step 3: R-box back to Internet (Response) - Always from R3 */}
+            {/* Step 3: Web App to Internet (Response) */}
             <path
               ref={path3Ref}
-              d={`M ${r3Coords.x - 5} ${r3Coords.y - 5} C 65 45, 55 45, 45 45`}
-              stroke="#10B981" // Green for response
-              strokeWidth="1" // Thin line
+              d={`M ${r3Coords.x} ${r3Coords.y} C 70 50, 60 50, 50 50`}
+              stroke="currentColor"
+              strokeWidth="2"
               fill="none"
               style={{
                 strokeDasharray: pathLengths.p3,
                 strokeDashoffset: animationStep >= 3 ? 0 : pathLengths.p3,
-                transition: "stroke-dashoffset 0.7s ease-out",
+                transition: "stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             />
-            {/* Step 4: Internet to Response Box (Final Response) */}
+            {/* Step 4: Internet to Web Client (Response) */}
             <path
               ref={path4Ref}
-              d="M 45 45 C 40 42, 35 40, 30 40" // Curve from Internet to Response area
-              stroke="#10B981" // Green for response
-              strokeWidth="1" // Thin line
+              d="M 50 50 C 45 47, 40 45, 20 45" // Curve from Internet to Web Client
+              stroke="currentColor"
+              strokeWidth="2"
               fill="none"
               style={{
                 strokeDasharray: pathLengths.p4,
                 strokeDashoffset: animationStep >= 4 ? 0 : pathLengths.p4,
-                transition: "stroke-dashoffset 0.7s ease-out",
+                transition: "stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             />
 
@@ -463,55 +509,64 @@ export default function Home() {
           >
             {/* Browser Box as nested container */}
             {showBrowserBox && (
-              <div className="absolute inset-4 bg-gray-800 rounded-lg">
+              <div className="absolute inset-2 sm:inset-4 bg-gray-800 rounded-lg">
                 {/* Window Controls */}
-                <div className="absolute top-2 left-2 flex gap-1">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <div className="absolute top-1 sm:top-2 left-1 sm:left-2 flex gap-1">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-yellow-500 rounded-full"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full"></div>
                 </div>
                 {/* Window Title */}
-                <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs font-medium text-white">
+                <div className="absolute top-1 sm:top-2 left-1/2 -translate-x-1/2 text-xs font-medium text-white truncate max-w-[80%]">
                   web Client browser
                 </div>
-                {/* App Icons */}
                 {/* Navigation Bar */}
-                <div className="absolute top-8 left-2 right-2 h-6 bg-gray-700 rounded flex items-center px-2">
+                <div className="absolute top-6 sm:top-8 left-1 sm:left-2 right-1 sm:right-2 h-5 sm:h-6 bg-gray-700 rounded flex items-center px-1 sm:px-2 gap-1">
                   {/* URL Input Field */}
                   <input
                     type="text"
-                    value={urlInput}
+                    value={isTyping ? typedUrl : urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
-                    className="flex-1 bg-white rounded px-2 py-1 text-xs text-gray-700 outline-none"
+                    className="flex-1 bg-white rounded px-1 sm:px-2 py-0.5 sm:py-1 text-xs text-gray-700 outline-none min-w-0"
                     placeholder="Enter r1-r6..."
+                    style={{ 
+                      textAlign: 'left',
+                      overflow: 'auto',
+                      whiteSpace: 'nowrap'
+                    }}
+                    readOnly={isTyping}
                   />
                   {/* Go Button */}
                   <button
                     onClick={handleGoClick}
-                    className="ml-2 bg-green-500 text-white text-xs px-2 py-1 rounded hover:bg-green-600 cursor-pointer"
+                    className="ml-1 sm:ml-2 bg-green-500 text-white text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded hover:bg-green-600 cursor-pointer"
                   >
                     Go
                   </button>
                 </div>
                 {/* Client Browser Label */}
-                <div className="absolute top-16 left-2 text-xs text-gray-300">Response</div>
+                <div className="absolute top-12 sm:top-16 left-1 sm:left-2 text-xs text-gray-300">Response</div>
                 {/* Response Area */}
-                <div className={`absolute top-20 left-2 right-2 bottom-2 rounded ${
+                <div className={`absolute top-16 sm:top-20 left-1 sm:left-2 right-1 sm:right-2 bottom-1 sm:bottom-2 rounded ${
                   isDarkMode ? 'bg-black' : 'bg-white'
                 }`}>
-                  <div className={`absolute top-2 left-2 text-xs font-bold ${
+                  <div className={`absolute top-1 sm:top-2 left-1 sm:left-2 text-xs font-bold ${
                     isDarkMode ? 'text-white' : 'text-gray-700'
                   }`}>Response</div>
-                  <div className={`absolute inset-2 rounded flex flex-col items-center justify-center ${
+                  <div className={`absolute inset-1 sm:inset-2 rounded flex flex-col items-center justify-center overflow-y-auto ${
                     isDarkMode ? 'bg-gray-900' : 'bg-gray-100'
                   }`}>
                     {showResponse ? (
-                      selectedRBox ? getResponseContent(selectedRBox) : (
-                        <div className={`text-xs w-full px-2 ${
+                      selectedRBox ? (
+                        <div className="w-full h-full overflow-y-auto">
+                          {getResponseContent(selectedRBox)}
+                        </div>
+                      ) : (
+                        <div className={`text-xs w-full px-1 sm:px-2 ${
                           isDarkMode ? 'text-gray-300' : 'text-gray-700'
                         }`}>
-                          <div className="text-center mb-3">
-                            <div className="w-8 h-8 bg-red-500 rounded-full mb-2 mx-auto"></div>
+                          <div className="text-center mb-2 sm:mb-3">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-500 rounded-full mb-1 sm:mb-2 mx-auto"></div>
                             <div className="font-medium mb-1 text-red-600">Error!</div>
                             <div className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{responseData}</div>
                           </div>
@@ -519,7 +574,7 @@ export default function Home() {
                       )
                     ) : (
                       <>
-                        <div className="w-8 h-8 bg-blue-500 rounded-full mb-2"></div>
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-full mb-1 sm:mb-2"></div>
                         <div className={`text-xs text-center ${
                           isDarkMode ? 'text-gray-400' : 'text-gray-500'
                         }`}>
@@ -535,7 +590,7 @@ export default function Home() {
           </div>
           {/* Bottom Label */}
           <div
-            className={`absolute -bottom-6 sm:-bottom-8 left-1/2 -translate-x-1/2 text-xs sm:text-sm md:text-base font-semibold transition-opacity duration-700 ${showLabels ? "opacity-100" : "opacity-0"}`}
+            className={`absolute -bottom-4 sm:-bottom-6 md:-bottom-8 left-1/2 -translate-x-1/2 text-xs sm:text-sm md:text-base font-semibold transition-opacity duration-700 ${showLabels ? "opacity-100" : "opacity-0"}`}
           >
             Client
           </div>
@@ -557,17 +612,16 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right Box */}
+        {/* Computer Box with Web Server inside */}
         <div className="relative flex flex-col items-center">
           {/* Top Label */}
           <div
             className={`absolute -top-6 sm:-top-12 left-1/2 -translate-x-1/2 text-xs sm:text-sm md:text-base font-semibold transition-opacity duration-700 text-center ${showLabels ? "opacity-100" : "opacity-0"}`}
           >
-            Web Server
-            <br />
-            (9090:Tomcat)
+            Computer
+            
           </div>
-          {/* Box */}
+          {/* Computer Box */}
           <div
             className={`w-48 h-64 sm:w-64 sm:h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] border-4 rounded-lg shadow-lg transition-opacity duration-700 relative ${
               showBoxes ? "opacity-100" : "opacity-0"
@@ -575,51 +629,69 @@ export default function Home() {
               isDarkMode ? 'border-white bg-black' : 'border-black bg-white'
             }`}
           >
-            {/* Web Container Box */}
-            <div
-              className={`absolute inset-x-8 inset-y-10 border-4 rounded-lg transition-opacity duration-700 z-10 ${showInnerBox ? "opacity-100" : "opacity-0"} ${
-                isDarkMode ? 'border-white bg-black' : 'border-black bg-white'
-              }`}
-            >
-              <div className={`absolute -top-7 left-4 text-xs sm:text-sm font-medium px-1 ${
+            {/* Web Server Box inside Computer */}
+            <div className="absolute inset-4 flex flex-col items-center justify-center">
+              {/* Web Server Label */}
+              <div className={`absolute top-0 left-1/2 -translate-x-1/2 text-xs font-medium  rounded whitespace-nowrap ${
                 isDarkMode ? 'text-white bg-black' : 'text-black bg-white'
               }`}>
-                Web Container
+                Web Server (9090:Tomcat)
               </div>
-              {/* Web App Box */}
+              {/* Web Server Box */}
               <div
-                className={`absolute inset-x-8 inset-y-10 border-4 rounded-lg transition-opacity duration-700 z-20 ${showWebApp ? "opacity-100" : "opacity-0"} ${
+                className={`w-40 h-56 sm:w-48 sm:h-64 md:w-64 md:h-80 lg:w-80 lg:h-96 border-4 rounded-lg shadow-lg transition-opacity duration-700 relative ${
+                  showBoxes ? "opacity-100" : "opacity-0"
+                } ${
                   isDarkMode ? 'border-white bg-black' : 'border-black bg-white'
                 }`}
               >
-                <div className={`absolute -top-6 left-4 text-xs sm:text-sm font-medium px-1 ${
-                  isDarkMode ? 'text-white bg-black' : 'text-black bg-white'
-                }`}>
-                  Web App
-                </div>
-                {/* R1-R6 Boxes Grid */}
-                <div className={`absolute inset-x-4 inset-y-8 grid grid-cols-3 gap-2 transition-all duration-500`}>
-                  {[1, 2, 3, 4, 5, 6].map((num) => (
-                    <div
-                      key={num}
-                      className={`border-2 rounded flex items-center justify-center text-xs font-medium transition-all duration-500 ${
-                        selectedRBox === num && animationStep >= 2 && animationStep <= 3 
-                          ? "bg-yellow-300 border-yellow-500 shadow-lg scale-110" 
-                          : isDarkMode ? 'border-white bg-black text-white' : 'border-black bg-white text-black'
-                      }`}
-                    >
-                      R{num}
+                {/* Web Container Box */}
+                <div
+                  className={`absolute inset-x-4 inset-y-6 border-4 rounded-lg transition-opacity duration-700 z-10 ${showInnerBox ? "opacity-100" : "opacity-0"} ${
+                    isDarkMode ? 'border-white bg-black' : 'border-black bg-white'
+                  }`}
+                >
+                  <div className={`absolute -top-5 left-2 text-xs font-medium px-1 ${
+                    isDarkMode ? 'text-white bg-black' : 'text-black bg-white'
+                  }`}>
+                    Web Container
+                  </div>
+                  {/* Web App Box */}
+                  <div
+                    className={`absolute inset-x-4 inset-y-6 border-4 rounded-lg transition-opacity duration-700 z-20 ${showWebApp ? "opacity-100" : "opacity-0"} ${
+                      isDarkMode ? 'border-white bg-black' : 'border-black bg-white'
+                    }`}
+                  >
+                    <div className={`absolute -top-5 left-2 text-xs font-medium px-1 ${
+                      isDarkMode ? 'text-white bg-black' : 'text-black bg-white'
+                    }`}>
+                      Web App
                     </div>
-                  ))}
+                    {/* R1-R6 Boxes Grid */}
+                    <div className={`absolute inset-x-2 inset-y-6 grid grid-cols-3 gap-1 transition-all duration-500`}>
+                      {[1, 2, 3, 4, 5, 6].map((num) => (
+                        <div
+                          key={num}
+                          className={`border-2 rounded flex items-center justify-center text-xs font-medium transition-all duration-500 ${
+                            selectedRBox === num && animationStep >= 2 && animationStep <= 3 
+                              ? "bg-yellow-300 border-yellow-500 shadow-lg scale-110" 
+                              : isDarkMode ? 'border-white bg-black text-white' : 'border-black bg-white text-black'
+                          }`}
+                        >
+                          R{num}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           {/* Bottom Label */}
           <div
-            className={`absolute -bottom-6 sm:-bottom-8 left-1/2 -translate-x-1/2 text-xs sm:text-sm md:text-base font-semibold transition-opacity duration-700 ${showLabels ? "opacity-100" : "opacity-0"}`}
+            className={`absolute -bottom-4 sm:-bottom-6 md:-bottom-8 left-1/2 -translate-x-1/2 text-xs sm:text-sm md:text-base font-semibold transition-opacity duration-700 whitespace-nowrap ${showLabels ? "opacity-100" : "opacity-0"}`}
           >
-            Server(192.168.0.20)
+            Server (192.168.0.20)
           </div>
         </div>
       </div>
