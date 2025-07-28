@@ -1,6 +1,7 @@
 "use client"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { useDarkMode } from "./context/DarkModeContext"
 
 // Sun and Moon Icons
 const SunIcon = () => (
@@ -52,7 +53,7 @@ export default function Home() {
   const [animationStep, setAnimationStep] = useState(0) // 0: none, 1: path1, 2: path2, 3: path3, 4: path4
   const [showRequestLabel, setShowRequestLabel] = useState(false)
   const [showResponseLabel, setShowResponseLabel] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const { isDarkMode, toggleDarkMode } = useDarkMode()
 
   // Refs for SVG paths to get their lengths
   const path1Ref = useRef(null)
@@ -342,15 +343,13 @@ export default function Home() {
     // setShowResponseLabel(false)
   }
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode)
-  }
+
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 border-4 rounded-xl shadow-lg mx-4 sm:mx-6 md:mx-8 gap-2 transition-colors duration-300 ${
       isDarkMode 
-        ? 'bg-black border-white text-white' 
-        : 'bg-white border-black text-black'
+        ? 'border-white' 
+        : 'border-black'
     }`}>
       {/* Buttons at the top */}
       <div className="flex justify-center gap-4 sm:gap-6 mb-6 sm:mb-8 w-full">
@@ -524,7 +523,7 @@ export default function Home() {
                         <div className={`text-xs text-center ${
                           isDarkMode ? 'text-gray-400' : 'text-gray-500'
                         }`}>
-                          <div>Enter r1-r6 and click "Go" to see the response</div>
+                          <div>Enter r1-r6 and click &quot;Go&quot; to see the response</div>
                           <div>Your web client is ready to browse!</div>
                         </div>
                       </>
